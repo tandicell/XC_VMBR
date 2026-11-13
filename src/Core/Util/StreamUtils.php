@@ -270,6 +270,11 @@ class StreamUtils {
 			$rURL .= ' live=1 timeout=10';
 		} else {
 			if (self::needsResolver($rURL)) {
+				// Explicit opt-in for pages outside the known platforms. Keep the
+				// stored page URL so expiring media links are resolved on restart.
+				if (parse_url($rURL, PHP_URL_FRAGMENT) === 'xcvm-resolve') {
+					$rURL = explode('#', $rURL, 2)[0];
+				}
 				$rURL = self::resolveWithYtDlp($rURL, $rProxy, $rMaxHeight);
 			}
 		}
@@ -314,16 +319,29 @@ class StreamUtils {
 	/**
 	 * Whether a source URL is a platform page parseStreamURL() has to resolve
 	 * (through yt-dlp) into a playable — and short-lived — media URL.
+	 * Append #xcvm-resolve to opt in for another yt-dlp-supported video/live
+	 * page, e.g. https://example.com/watch/123#xcvm-resolve. Direct media
+	 * URLs on other hosts are passed to ffmpeg unchanged without this marker.
 	 *
 	 * @param string $rURL Source URL.
 	 * @return bool
 	 */
 	public static function needsResolver(string $rURL) {
-		if (strtolower(substr($rURL, 0, 4)) !== 'http') {
+		$rScheme = strtolower((string) parse_url($rURL, PHP_URL_SCHEME));
+		$rHost = strtolower((string) parse_url($rURL, PHP_URL_HOST));
+		if (!in_array($rScheme, ['http', 'https'], true) || $rHost === '') {
 			return false;
 		}
-		$rHost = str_ireplace('www.', '', (string) parse_url($rURL, PHP_URL_HOST));
-		return in_array($rHost, self::RESOLVED_PLATFORMS, true);
+		if (parse_url($rURL, PHP_URL_FRAGMENT) === 'xcvm-resolve') {
+			return true;
+		}
+		foreach (self::RESOLVED_PLATFORMS as $rPlatform) {
+			// Match a domain boundary: youtube.com.example.org is not YouTube.
+			if ($rHost === $rPlatform || substr($rHost, -strlen('.' . $rPlatform)) === '.' . $rPlatform) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
