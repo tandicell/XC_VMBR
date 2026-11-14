@@ -298,9 +298,13 @@ class StreamUtils {
 	 * @return string
 	 */
 	private static function resolveWithYtDlp(string $rURL, string $rProxy, int $rMaxHeight = 0) {
+		// Only select a single URL containing both audio and video. Regular YouTube
+		// videos may expose separate audio-only and video-only variants; handing
+		// ffmpeg the first of those URLs produces a silent or black stream.
+		// yt-dlp's 'best' format selector selects a muxed format where available.
 		$rFormat = $rMaxHeight > 0 ? 'best[height<=' . $rMaxHeight . ']/best' : 'best';
 		foreach (['mweb', 'default,android_vr'] as $rClients) {
-			$rArgv = [YOUTUBE_BIN, '--extractor-args', 'youtube:player_client=' . $rClients, '-q', '--get-url', '--skip-download', '-f', $rFormat];
+			$rArgv = [YOUTUBE_BIN, '--extractor-args', 'youtube:player_client=' . $rClients, '-q', '--no-playlist', '--get-url', '--skip-download', '-f', $rFormat];
 			if ($rProxy !== '') {
 				array_push($rArgv, '--proxy', self::proxyURL($rProxy));
 			}

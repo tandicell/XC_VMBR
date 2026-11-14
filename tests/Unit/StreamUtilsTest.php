@@ -89,6 +89,25 @@ final class StreamUtilsTest extends TestCase {
 		}
 	}
 
+	public function testYouTubeWatchUrlWithPlaylistIsResolvedAsSingleVideo() {
+		if (!defined('YOUTUBE_BIN')) {
+			define('YOUTUBE_BIN', '/bin/yt-dlp');
+		}
+		$rCalls = [];
+		ProcessRunner::useCapturer(function (array $rArgv) use (&$rCalls) {
+			$rCalls[] = $rArgv;
+			return [0, "https://media.example/video.mp4\n"];
+		});
+		try {
+			$rPage = 'https://www.youtube.com/watch?v=example123&list=playlist123';
+			$this->assertSame('https://media.example/video.mp4', StreamUtils::parseStreamURL($rPage));
+			$this->assertContains('--no-playlist', $rCalls[0]);
+			$this->assertSame(['--', $rPage], array_slice($rCalls[0], -2));
+		} finally {
+			ProcessRunner::useCapturer(null);
+		}
+	}
+
 	public function testParseStreamUrlFallsBackFromMwebToAndroidVr() {
 		if (!defined('YOUTUBE_BIN')) {
 			define('YOUTUBE_BIN', '/bin/yt-dlp');
