@@ -304,7 +304,7 @@ class StreamUtils {
 		// yt-dlp's 'best' format selector selects a muxed format where available.
 		$rFormat = $rMaxHeight > 0 ? 'best[height<=' . $rMaxHeight . ']/best' : 'best';
 		foreach (['mweb', 'default,android_vr'] as $rClients) {
-			$rArgv = [YOUTUBE_BIN, '--extractor-args', 'youtube:player_client=' . $rClients, '-q', '--get-url', '--skip-download', '-f', $rFormat];
+			$rArgv = [YOUTUBE_BIN, '--extractor-args', 'youtube:player_client=' . $rClients, '-q', '--no-playlist', '--get-url', '--skip-download', '-f', $rFormat];
 			if ($rProxy !== '') {
 				array_push($rArgv, '--proxy', self::proxyURL($rProxy));
 			}
