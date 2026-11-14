@@ -174,9 +174,13 @@ able to reach the proxy. To check a stream before going live, use the command in
   deno the panel falls back to a client that needs no runtime: some broadcasts do not
   open through it at all, and YouTube cuts the segments of the rest off after about
   30 seconds, so the stream restarts every half minute.
-- **Regular (non-live) YouTube videos:** not supported for now. YouTube refuses their
-  download links to the panel's `yt-dlp` without a JavaScript runtime, even through a
-  proxy.
+- **Regular (non-live) YouTube videos:** experimental, not guaranteed. The panel
+  resolves the video page through `yt-dlp` and selects a single combined audio/video
+  format when one is available. Links that contain both `v=` and `list=` target the
+  individual video rather than the full playlist. Some videos only offer separate
+  video and audio formats or reject server-side access, and cannot be restreamed by
+  this single-input live pipeline. A JavaScript runtime and legitimate access to the
+  video are required; test before adding to a live channel.
 - **Other platforms resolved the same way:** Twitch, Vimeo, Dailymotion, Facebook,
   Livestream, Ustream and CNN links also go through `yt-dlp` and use the stream's proxy
   the same way.
